@@ -1,0 +1,48 @@
+Evidence from the end of the "Create a web API with ASP.NET Core controllers" module
+
+Existing records:
+- Id 1: Classic Italian (Gluten Free: false)
+- Id 2: Veggie (Gluten Free: true)
+- Id 3: Fugazzeta (Gluten Free: false)
+
+My additional record:
+- Id 4: Margherita (Gluten Free: true)
+
+Testing the API behavior (Endpoints):
+- GET /Pizza -> Returns 200 OK (fetches the whole list)
+- POST /Pizza sending {"name":"Margherita","isGlutenFree":true} -> Returns 201 Created
+- PUT /Pizza/4 sending {"id":4,"name":"Margherita Updated","isGlutenFree":true} -> Returns 204 No Content (updated successfully)
+- DELETE /Pizza/4 -> Returns 204 No Content (deleted with no issues)
+
+Working sales summary function (Part 2):
+
+void GenerateSalesSummary(IEnumerable<string> salesFiles, string outputDir)
+{
+    double grandTotal = 0;
+    StringBuilder reportBuilder = new StringBuilder();
+
+    reportBuilder.AppendLine("Sales Summary");
+    reportBuilder.AppendLine("-----------------------------------------" );
+
+    StringBuilder detailsBuilder = new StringBuilder();
+    detailsBuilder.AppendLine("Details:");
+
+    foreach (var file in salesFiles)
+    {
+        string salesJson = File.ReadAllText(file);
+        SalesData? data = JsonConvert.DeserializeObject<SalesData?>(salesJson);
+        double fileTotal = data?.Total ?? 0;
+
+        grandTotal += fileTotal;
+
+        string friendlyPath = Path.Combine(Path.GetFileName(Path.GetDirectoryName(file) ?? ""), Path.GetFileName(file));
+        detailsBuilder.AppendLine($"  {friendlyPath}: {fileTotal:C}");
+    }
+
+    reportBuilder.AppendLine($"  Total Sales: {grandTotal:C}");
+    reportBuilder.AppendLine();
+    reportBuilder.Append(detailsBuilder.ToString());
+
+    string outputPath = Path.Combine(outputDir, "sales_summary.txt");
+    File.WriteAllText(outputPath, reportBuilder.ToString());
+}
